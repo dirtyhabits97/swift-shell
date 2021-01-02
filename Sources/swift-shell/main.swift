@@ -3,6 +3,7 @@ import Foundation
 // source: https://rderik.com/blog/understanding-the-runloop-model-by-creating-a-basic-shell/
 
 let customMode = "com.gerh.swift-shell"
+let promptPlaceHolder = "[00:00:00] $ "
 
 func list() -> [String] {
     let fm = FileManager.default
@@ -21,12 +22,14 @@ func processCommand(
     case "exit":
         return -1
     case "ls":
-        print(list(), terminator: "\n$ ")
+        print(list(), terminator: "\n\(promptPlaceHolder)")
+        fflush(__stdoutp)
         return 0
     case "":
         return 1
     default:
-        print("Your command: \(command)|", terminator: "\n$ ")
+        print("Your command: \(command)", terminator: "\n\(promptPlaceHolder)")
+        fflush(__stdoutp)
         return 0
     }
 }
@@ -86,9 +89,16 @@ func registerStdinFileDescriptor() {
 //print(Date.distantFuture)
 //print(Date.distantFuture)
 
-print("Welcome to my shell \n% ", terminator: "")
+print("Welcome to my shell \n\(promptPlaceHolder)", terminator: "")
 fflush(__stdoutp)
 registerStdinFileDescriptor()
+
+// Important Note this won't work correctly on the Xcode
+// console because the debug console is not a full terminal
+// and doesn't support all the control escape sequences
+let pt = PromptTimer()
+pt.start()
+
 RunLoop.main.run(
     mode: RunLoop.Mode(rawValue: customMode),
     before: .distantFuture
